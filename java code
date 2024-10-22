@@ -1,0 +1,96 @@
+import java.awt.Color;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import javax.imageio.ImageIO;
+
+public class SatelliteImageProcessor {
+    public static void main(String[] args) {
+        try {
+            // Load the satellite image
+            File imageFile = new File("E:/project code/img.png");
+            BufferedImage satelliteImage = ImageIO.read(imageFile);
+
+            if (satelliteImage == null) {
+                System.out.println("Error: Could not load image.");
+                return;
+            }
+
+            // Output images for different highlighted areas
+            BufferedImage waterBodiesImage = new BufferedImage(satelliteImage.getWidth(), satelliteImage.getHeight(), BufferedImage.TYPE_INT_RGB);
+            BufferedImage agricultureAreasImage = new BufferedImage(satelliteImage.getWidth(), satelliteImage.getHeight(), BufferedImage.TYPE_INT_RGB);
+            BufferedImage populationAreasImage = new BufferedImage(satelliteImage.getWidth(), satelliteImage.getHeight(), BufferedImage.TYPE_INT_RGB);
+
+            // Loop through each pixel in the satellite image
+            for (int x = 0; x < satelliteImage.getWidth(); x++) {
+                for (int y = 0; y < satelliteImage.getHeight(); y++) {
+                    // Get the color of the pixel
+                    int pixel = satelliteImage.getRGB(x, y);
+                    Color color = new Color(pixel);
+
+                    // Check for water bodies
+                    if (isWaterBody(color)) {
+                        waterBodiesImage.setRGB(x, y, Color.CYAN.getRGB()); // Highlight water in cyan
+                    } else {
+                        waterBodiesImage.setRGB(x, y, Color.BLACK.getRGB()); // Non-water regions in black
+                    }
+
+                    // Check for agricultural areas
+                    if (isAgriculturalArea(color)) {
+                        agricultureAreasImage.setRGB(x, y, Color.YELLOW.getRGB()); // Highlight agriculture in yellow
+                    } else {
+                        agricultureAreasImage.setRGB(x, y, Color.BLACK.getRGB()); // Non-agricultural regions in black
+                    }
+
+                    // Check for population areas
+                    if (isPopulationArea(color)) {
+                        populationAreasImage.setRGB(x, y, Color.MAGENTA.getRGB()); // Highlight populated areas in magenta
+                    } else {
+                        populationAreasImage.setRGB(x, y, Color.BLACK.getRGB()); // Non-populated regions in black
+                    }
+                }
+            }
+
+            // Save the resulting images
+            ImageIO.write(waterBodiesImage, "png", new File("water_bodies.png"));
+            ImageIO.write(agricultureAreasImage, "png", new File("agriculture_areas.png"));
+            ImageIO.write(populationAreasImage, "png", new File("population_areas.png"));
+
+            System.out.println("Processing completed. Images saved.");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    // Function to detect water bodies (blue-dominant colors)
+    public static boolean isWaterBody(Color color) {
+        int red = color.getRed();
+        int green = color.getGreen();
+        int blue = color.getBlue();
+
+        // Detect blue-dominant colors typically representing water
+        return blue < 1 && red < 1 && green < 26;
+    }
+
+    // Function to detect agricultural areas (green-dominant colors)
+    public static boolean isAgriculturalArea(Color color) {
+        int red = color.getRed();
+        int green = color.getGreen();
+        int blue = color.getBlue();
+
+        // Detect green-dominant colors for agriculture
+        return green > 150 && red < 100 && blue < 100;
+    }
+
+    // Function to detect population areas (high brightness, urban areas)
+    public static boolean isPopulationArea(Color color) {
+        int red = color.getRed();
+        int green = color.getGreen();
+        int blue = color.getBlue();
+
+        // Calculate the brightness of the pixel
+        int brightness = (red + green + blue) / 3;
+
+        // Consider areas with high brightness to be population centers
+        return brightness > 170;
+    }
+}
